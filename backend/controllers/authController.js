@@ -24,7 +24,8 @@ const register = async (req, res) => {
     try {
       const authToken = req.header('Authorization')?.replace('Bearer ', '') || null;
       if (authToken) {
-        const decodedReq = jwt.verify(authToken, process.env.JWT_SECRET || 'fallback-secret');
+        if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET not configured');
+        const decodedReq = jwt.verify(authToken, process.env.JWT_SECRET);
         const requestingUser = await User.findById(decodedReq.userId).select('role');
         if (requestingUser && requestingUser.role === 'admin' && req.body.role) {
           requestedRole = req.body.role === 'admin' ? 'admin' : 'user';
@@ -43,7 +44,7 @@ const register = async (req, res) => {
       return res.status(400).json({ message: 'User already exists with this email' });
     }
     const userPayload = { name, email, password, mobile };
-    if (requestedRole) userPayload.role = requestedRole;
+  if (requestedRole) userPayload.role = requestedRole;
     const user = new User(userPayload);
     await user.save();
     // If the registration is performed by an admin (requestedRole set), do not auto-login — return created user info only.
@@ -51,12 +52,15 @@ const register = async (req, res) => {
       return res.status(201).json({ message: 'User created by admin', user: { id: user._id, name: user.name, email: user.email, role: user.role } });
     }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET || 'fallback-secret', { expiresIn: '7d' });
+    if (!process.env.JWT_SECRET) {
+      // Do not issue tokens if secret missing
+      return res.status(500).json({ message: 'Server configuration error' });
+    }
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
     res.status(201).json({ message: 'User registered successfully', token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
   } catch (error) {
     console.error('Registration error:', error);
-    // Include error message in response while debugging (remove in production)
-    res.status(500).json({ message: `Server error during registration: ${error.message}` });
+    res.status(500).json({ message: process.env.NODE_ENV === 'production' ? 'Server error' : `Server error during registration: ${error.message}` });
   }
 };
 
@@ -74,12 +78,12 @@ const login = async (req, res) => {
     if (!user) return res.status(400).json({ message: 'Invalid credentials' });
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET || 'fallback-secret', { expiresIn: '7d' });
+    if (!process.env.JWT_SECRET) return res.status(500).json({ message: 'Server configuration error' });
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
     res.json({ message: 'Login successful', token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
   } catch (error) {
     console.error('Login error:', error);
-    // Include error message in response while debugging (remove in production)
-    res.status(500).json({ message: `Server error during login: ${error.message}` });
+    res.status(500).json({ message: process.env.NODE_ENV === 'production' ? 'Server error' : `Server error during login: ${error.message}` });
   }
 };
 

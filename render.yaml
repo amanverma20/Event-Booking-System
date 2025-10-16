@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: event-booking-backend
+    env: node
+    plan: free
+    branch: main
+    repo: https://github.com/amanverma20/Event-Booking-System
+    root: backend
+    buildCommand: "npm install"
+    startCommand: "npm start"
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+    healthCheckPath: /api/health

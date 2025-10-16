@@ -26,7 +26,8 @@ const getEvents = async (req, res) => {
           { location: { $regex: re } }
         ];
       } catch (e) {
-        console.warn('Invalid search regex, ignoring search param:', search);
+          const logger = require('../utils/logger');
+          logger.warn('Invalid search regex, ignoring search param:', search);
       }
     }
 
@@ -44,7 +45,8 @@ const getEvents = async (req, res) => {
 
     res.json({ events, totalPages: Math.max(1, Math.ceil(total / limitNum)), currentPage: pageNum, total });
   } catch (error) {
-    console.error('Get events error:', error);
+      const logger = require('../utils/logger');
+      logger.error('Get events error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };

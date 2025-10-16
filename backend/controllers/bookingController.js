@@ -10,7 +10,8 @@ const createBooking = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      console.warn('Create booking validation failed:', errors.array());
+      const logger = require('../utils/logger');
+      logger.warn('Create booking validation failed:', errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
@@ -47,7 +48,8 @@ const createBooking = async (req, res) => {
 
     res.status(201).json({ message: 'Booking created successfully', booking });
   } catch (error) {
-    console.error('Create booking error:', error);
+    const logger = require('../utils/logger');
+    logger.error('Create booking error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
