@@ -11,9 +11,6 @@ const registerValidation = [
   body('email').isEmail().normalizeEmail().withMessage('Please provide a valid email'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
   body('mobile').optional().isMobilePhone().withMessage('Please provide a valid mobile number')
-  ,
-  body('role').optional().isIn(['user', 'admin']).withMessage('Invalid role'),
-  body('adminSecret').optional().trim()
 ];
 
 const loginValidation = [

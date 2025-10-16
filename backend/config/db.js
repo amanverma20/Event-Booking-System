@@ -1,13 +1,5 @@
 const mongoose = require('mongoose');
 
-/**
- * connectDB - establishes a mongoose connection using environment variable
- * MONGODB_URI (or MONGO_URI). Exports the mongoose instance.
- *
- * Behavior:
- * - Retries a few times with exponential backoff on failure.
- * - Throws an error if unable to connect after retries.
- */
 let _mongoose;
 
 async function connectDB(options = {}) {
